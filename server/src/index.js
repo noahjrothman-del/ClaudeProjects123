@@ -2,7 +2,17 @@ import cors from 'cors';
 import express from 'express';
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
-import { createRoom, getRoom, joinRoom, removePlayer, serializeRoom, startRound } from './rooms.js';
+import {
+  broadcastRoom,
+  createRoom,
+  findRoomBySocket,
+  joinRoom,
+  markDisconnected,
+  rejoinRoom,
+  serializeRoom,
+  startRound,
+} from './rooms.js';
+import { declareClaim, handlePlayerDisconnected, submitSolution } from './roundManager.js';
 
 const PORT = process.env.PORT || 3001;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
@@ -15,10 +25,6 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: { origin: CLIENT_ORIGIN },
 });
-
-function broadcastRoom(room) {
-  io.to(room.code).emit('room:update', serializeRoom(room));
-}
 
 io.on('connection', (socket) => {
   socket.on('room:create', ({ name } = {}, ack) => {
@@ -35,11 +41,24 @@ io.on('connection', (socket) => {
     }
     socket.join(room.code);
     ack?.({ ok: true, room: serializeRoom(room) });
-    broadcastRoom(room);
+    broadcastRoom(io, room);
+  });
+
+  // Rejoining an existing room (e.g. after a page refresh) reuses the
+  // player's prior seat/score instead of adding a new roster entry.
+  socket.on('room:rejoin', ({ code, name } = {}, ack) => {
+    const room = rejoinRoom(code, socket.id, name || 'Player');
+    if (!room) {
+      ack?.({ ok: false, error: `Room "${code}" not found` });
+      return;
+    }
+    socket.join(room.code);
+    ack?.({ ok: true, room: serializeRoom(room) });
+    broadcastRoom(io, room);
   });
 
   socket.on('round:start', (_payload, ack) => {
-    const room = findRoomForSocket(socket);
+    const room = findRoomBySocket(socket.id);
     if (!room) {
       ack?.({ ok: false, error: 'Not in a room' });
       return;
@@ -50,22 +69,37 @@ io.on('connection', (socket) => {
     }
     startRound(room);
     ack?.({ ok: true });
-    broadcastRoom(room);
+    broadcastRoom(io, room);
+  });
+
+  socket.on('claim:declare', ({ moveCount } = {}, ack) => {
+    const room = findRoomBySocket(socket.id);
+    if (!room) {
+      ack?.({ ok: false, error: 'Not in a room' });
+      return;
+    }
+    const player = room.players.get(socket.id);
+    const result = declareClaim(io, room, socket.id, player?.name || 'Player', moveCount);
+    ack?.(result);
+  });
+
+  socket.on('claim:submit', ({ moves } = {}, ack) => {
+    const room = findRoomBySocket(socket.id);
+    if (!room) {
+      ack?.({ ok: false, error: 'Not in a room' });
+      return;
+    }
+    const result = submitSolution(io, room, socket.id, moves);
+    ack?.(result);
   });
 
   socket.on('disconnect', () => {
-    const room = removePlayer(socket.id);
-    if (room) broadcastRoom(room);
+    const room = markDisconnected(socket.id);
+    if (!room) return;
+    handlePlayerDisconnected(io, room, socket.id);
+    broadcastRoom(io, room);
   });
 });
-
-function findRoomForSocket(socket) {
-  for (const code of socket.rooms) {
-    const room = getRoom(code);
-    if (room) return room;
-  }
-  return null;
-}
 
 httpServer.listen(PORT, () => {
   console.log(`Ricochet Robots server listening on port ${PORT}`);

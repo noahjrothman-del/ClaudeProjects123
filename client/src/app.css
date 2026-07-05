@@ -470,3 +470,370 @@
     grid-template-rows: repeat(2, 52px);
   }
 }
+
+/* ---------- Mode tabs + per-mode toolbar ---------- */
+
+.mode-tabs {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+  background: var(--color-panel);
+  border: 1px solid var(--color-panel-border);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.mode-tabs__btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-dim);
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.mode-tabs__btn--active {
+  background: var(--color-bg-raised);
+  color: var(--color-amber);
+}
+
+.mode-toolbar {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ---------- Multiplayer: lobby ---------- */
+
+.lobby {
+  width: 100%;
+  max-width: 640px;
+  margin: 24px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lobby__status {
+  color: var(--color-text-dim);
+  font-size: 0.85rem;
+}
+
+.lobby__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+.lobby__field input {
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-panel-border);
+  color: var(--color-text);
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.lobby__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .lobby__actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lobby__card {
+  background: var(--color-panel);
+  border: 1px solid var(--color-panel-border);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lobby__card h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.lobby__card p {
+  margin: 0;
+  color: var(--color-text-dim);
+  font-size: 0.85rem;
+}
+
+.lobby__card button {
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-amber-dim);
+  color: var(--color-amber);
+  padding: 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.lobby__card button:not(:disabled):hover {
+  border-color: var(--color-amber);
+  background: rgba(245, 166, 35, 0.1);
+}
+
+.lobby__code-input {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.lobby__error,
+.claim-panel__error {
+  color: var(--color-danger);
+  font-size: 0.85rem;
+}
+
+/* ---------- Multiplayer: room bar + room lobby ---------- */
+
+.mp-room-bar {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--color-text-dim);
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+.mp-room-bar button {
+  background: transparent;
+  border: 1px solid var(--color-panel-border);
+  color: var(--color-text-dim);
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+.room-lobby {
+  width: 100%;
+  max-width: 480px;
+  margin: 24px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.room-lobby__code-card {
+  background: var(--color-panel);
+  border: 1px dashed var(--color-amber-dim);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.room-lobby__code-label {
+  color: var(--color-text-dim);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+}
+
+.room-lobby__code {
+  font-size: 2.2rem;
+  color: var(--color-amber);
+  letter-spacing: 0.15em;
+}
+
+.room-lobby__code-card p {
+  margin: 0;
+  color: var(--color-text-dim);
+  font-size: 0.85rem;
+}
+
+.room-lobby__start {
+  background: var(--color-amber);
+  color: #14100a;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.room-lobby__waiting {
+  text-align: center;
+  color: var(--color-text-dim);
+}
+
+/* ---------- Multiplayer: scoreboard ---------- */
+
+.scoreboard {
+  background: var(--color-panel);
+  border: 1px solid var(--color-panel-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.scoreboard h2 {
+  font-size: 0.95rem;
+  margin: 0 0 10px;
+}
+
+.scoreboard__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scoreboard__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.88rem;
+  padding: 4px 0;
+}
+
+.scoreboard__item--offline {
+  opacity: 0.5;
+}
+
+.scoreboard__name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scoreboard__badge {
+  font-size: 0.65rem;
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-panel-border);
+  color: var(--color-text-dim);
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.scoreboard__badge--you {
+  color: var(--color-amber);
+  border-color: var(--color-amber-dim);
+}
+
+.scoreboard__offline-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-danger);
+  display: inline-block;
+}
+
+.scoreboard__score {
+  font-weight: 700;
+  color: var(--color-amber);
+}
+
+/* ---------- Multiplayer: claim panel ---------- */
+
+.claim-panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-panel-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.claim-panel h2 {
+  font-size: 0.95rem;
+  margin: 0 0 10px;
+}
+
+.claim-panel__empty {
+  color: var(--color-text-dim);
+  font-size: 0.85rem;
+}
+
+.claim-panel__list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.claim-panel__item--leader {
+  color: var(--color-amber);
+  font-weight: 700;
+}
+
+.claim-panel__timer {
+  color: var(--color-amber);
+  margin: 0 0 10px;
+}
+
+.claim-panel__form {
+  display: flex;
+  gap: 8px;
+}
+
+.claim-panel__form input {
+  width: 90px;
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-panel-border);
+  color: var(--color-text);
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+.claim-panel__form button,
+.claim-panel__submit button {
+  background: var(--color-amber);
+  color: #14100a;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+.claim-panel__submit p {
+  font-size: 0.85rem;
+  color: var(--color-text-dim);
+  margin: 0 0 8px;
+}
+
+.claim-panel__result {
+  font-size: 0.95rem;
+}
+
+/* ---------- Multiplayer: round layout ---------- */
+
+.mp-round {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+.mp-round__board-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+@media (max-width: 860px) {
+  .mp-round {
+    grid-template-columns: 1fr;
+  }
+}
