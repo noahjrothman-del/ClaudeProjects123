@@ -53,4 +53,21 @@ This runs a handful of console assertions covering sliding physics, wall/blocker
 ## Deploying
 
 - The server is a standard Node process (`node server/src/index.js`); set `PORT` and `CLIENT_ORIGIN` (for CORS) as needed.
-- The client is a static Vite build (`npm run build --workspace client`) that can be served from any static host, pointed at the deployed server via `VITE_SERVER_URL`.
+- The client is a static Vite build (`npm run build --workspace client`) that can be served from any static host, pointed at the deployed server via `VITE_SERVER_URL` — note this is read at **build time**, not runtime, so it must be set before the client build runs.
+
+### Deploying to Render
+
+A `render.yaml` Blueprint is included at the repo root, defining two services: `ricochet-robots-server` (Node web service) and `ricochet-robots-client` (static site), wired together via Render's `fromService` env var references so each one's URL is passed to the other automatically.
+
+To deploy:
+1. On [Render](https://render.com), **New +** → **Blueprint**, and point it at this repo/branch.
+2. Render will read `render.yaml` and propose both services — review and apply.
+3. Once both are live, open the `ricochet-robots-client` URL — that's your shareable link.
+
+If the Blueprint sync has issues (field names occasionally shift between Render API versions), set the two services up manually instead:
+1. **New +** → **Web Service** for the server: Build Command `npm install`, Start Command `npm run start --workspace server`. Note its URL once deployed.
+2. **New +** → **Static Site** for the client: Build Command `npm install && VITE_SERVER_URL=https://<server-url> npm run build --workspace client`, Publish Directory `client/dist`.
+3. Back on the server service, add env var `CLIENT_ORIGIN=https://<client-url>` and save (triggers a redeploy).
+4. Open the static site's URL.
+
+Render's free tier spins down web services after 15 minutes idle, so the first request after a lull will be slow to wake up.

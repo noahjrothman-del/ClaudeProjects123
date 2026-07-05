@@ -1,0 +1,27 @@
+services:
+  # Express + Socket.IO backend. Free tier spins down after 15 min idle.
+  - type: web
+    name: ricochet-robots-server
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: CLIENT_ORIGIN="https://$CLIENT_HOST" npm run start --workspace server
+    envVars:
+      - key: CLIENT_HOST
+        fromService:
+          type: web
+          name: ricochet-robots-client
+          property: host
+
+  # Static Vite build of the React client.
+  - type: web
+    name: ricochet-robots-client
+    runtime: static
+    buildCommand: npm install && VITE_SERVER_URL="https://$SERVER_HOST" npm run build --workspace client
+    staticPublishPath: client/dist
+    envVars:
+      - key: SERVER_HOST
+        fromService:
+          type: web
+          name: ricochet-robots-server
+          property: host
