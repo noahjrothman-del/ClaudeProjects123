@@ -10,7 +10,11 @@ export default function Scoreboard({ players, hostId, youId }) {
               {p.name}
               {p.id === hostId && <span className="scoreboard__badge">HOST</span>}
               {p.id === youId && <span className="scoreboard__badge scoreboard__badge--you">YOU</span>}
-              {!p.connected && <span className="scoreboard__offline-dot" title="Disconnected" />}
+              {!p.connected && (
+                <span className="scoreboard__badge scoreboard__badge--offline">
+                  <span className="scoreboard__offline-dot" aria-hidden="true" /> offline
+                </span>
+              )}
             </span>
             <span className="mono scoreboard__score">{p.score}</span>
           </li>

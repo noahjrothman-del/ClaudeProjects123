@@ -65,6 +65,7 @@ export default function Robot({ color, row, col, cellPercent, selected, onSelect
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onClick={() => onSelect(color)}
     >
       <span className="robot__body">
         <svg className="robot__icon" viewBox="0 0 24 24" aria-hidden="true">

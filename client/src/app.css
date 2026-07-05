@@ -726,9 +726,15 @@
   border-color: var(--color-amber-dim);
 }
 
+.scoreboard__badge--offline {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+  text-transform: uppercase;
+}
+
 .scoreboard__offline-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--color-danger);
   display: inline-block;

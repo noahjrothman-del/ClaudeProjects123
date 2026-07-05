@@ -48,7 +48,9 @@ export default function Lobby({ onCreate, onJoin, error, connected }) {
         <form onSubmit={handleJoin} className="lobby__card">
           <h2>Join a room</h2>
           <p>Enter the room code a friend shared with you.</p>
+          <label htmlFor="room-code-input" className="visually-hidden">Room code</label>
           <input
+            id="room-code-input"
             type="text"
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}

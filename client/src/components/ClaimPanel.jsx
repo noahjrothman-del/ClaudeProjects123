@@ -43,11 +43,11 @@ export default function ClaimPanel({ round, youId, localMoveCount, onDeclare, on
       <div className="claim-panel">
         <h2>Round result</h2>
         {round.result ? (
-          <p className="claim-panel__result">
+          <p className="claim-panel__result" role="status">
             <strong>{round.result.name}</strong> solved it in {round.result.moveCount} moves!
           </p>
         ) : (
-          <p className="claim-panel__result">No one solved it in time.</p>
+          <p className="claim-panel__result" role="status">No one solved it in time.</p>
         )}
       </div>
     );
@@ -74,7 +74,8 @@ export default function ClaimPanel({ round, youId, localMoveCount, onDeclare, on
 
       {round.phase === 'proving' && (
         <p className="claim-panel__timer mono">
-          {round.provingPlayerId === youId ? 'Your turn to prove it!' : 'Demonstrating…'} {graceSeconds}s
+          <span role="status">{round.provingPlayerId === youId ? 'Your turn to prove it!' : 'Demonstrating…'}</span>{' '}
+          {graceSeconds}s
         </p>
       )}
 
@@ -87,7 +88,9 @@ export default function ClaimPanel({ round, youId, localMoveCount, onDeclare, on
       ) : (
         round.phase !== 'proving' && (
           <form onSubmit={handleDeclare} className="claim-panel__form">
+            <label htmlFor="claim-move-count" className="visually-hidden">Number of moves you can solve it in</label>
             <input
+              id="claim-move-count"
               type="number"
               min="1"
               value={input}
