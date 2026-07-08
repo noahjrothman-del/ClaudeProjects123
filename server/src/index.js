@@ -1,6 +1,9 @@
 import cors from 'cors';
 import express from 'express';
+import { existsSync } from 'node:fs';
 import { createServer } from 'node:http';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Server } from 'socket.io';
 import {
   broadcastRoom,
@@ -14,12 +17,23 @@ import {
 } from './rooms.js';
 import { declareClaim, handlePlayerDisconnected, submitSolution } from './roundManager.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3001;
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+// Unset in a single-process deploy (client served from this same origin, so
+// there's no cross-origin request to police). Explicit in local dev, where
+// the Vite dev server runs on a different port.
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || (process.env.NODE_ENV === 'production' ? true : 'http://localhost:5173');
 
 const app = express();
 app.use(cors({ origin: CLIENT_ORIGIN }));
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+// If a client build is present alongside this server (single-process deploy,
+// e.g. Replit), serve it — same origin as the Socket.IO connection below.
+const clientDistPath = path.join(__dirname, '../../client/dist');
+if (existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+}
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {

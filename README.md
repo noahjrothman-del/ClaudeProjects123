@@ -70,4 +70,14 @@ If the Blueprint sync has issues (field names occasionally shift between Render 
 3. Back on the server service, add env var `CLIENT_ORIGIN=https://<client-url>` and save (triggers a redeploy).
 4. Open the static site's URL.
 
+### Deploying to Replit (single process, simpler)
+
+Unlike Render's two-service split, Replit runs one persistent process behind one URL — a better natural fit here. The server serves the built client directly from the same origin as its own Socket.IO connection, so there's no CORS configuration and no `VITE_SERVER_URL` to set at all.
+
+1. On [Replit](https://replit.com), **Create App** → **Import from GitHub**, pick this repo/branch.
+2. It should detect `npm start` as the run command from the included `.replit` file (`npm run build --workspace client && npm run start --workspace server` under the hood — builds the client, then starts the server which serves that build). If Replit prompts you instead of auto-detecting, set the run command to `npm start` manually.
+3. Run it — Replit assigns a public URL. Open it; that's your link.
+
+Run `npm install` once first if Replit doesn't do it automatically before the first run.
+
 Render's free tier spins down web services after 15 minutes idle, so the first request after a lull will be slow to wake up.
