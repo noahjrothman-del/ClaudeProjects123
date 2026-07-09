@@ -461,8 +461,41 @@
 }
 
 @media (max-width: 480px) {
+  /* Mobile is the primary way this gets played: every bit of chrome trimmed
+     here is a bigger board and less scrolling before you can move a robot. */
+  .app {
+    padding: 8px 8px 20px;
+    gap: 8px;
+  }
+
+  .app-header {
+    gap: 8px;
+  }
+
   .app-header h1 {
-    font-size: 1rem;
+    font-size: 0.8rem;
+  }
+
+  .mode-tabs__btn {
+    padding: 6px 10px;
+    font-size: 0.78rem;
+  }
+
+  .mode-toolbar {
+    gap: 8px;
+  }
+
+  .target-callout {
+    font-size: 0.78rem;
+  }
+
+  /* Comfortable touch targets everywhere except the board itself — a 16-
+     column grid physically limits robot cell size on a phone, but every
+     other control (forms, buttons, tabs) has no such constraint. */
+  button:not(.robot):not(.dpad__btn),
+  input[type='text'],
+  input[type='number'] {
+    min-height: 44px;
   }
 
   .dpad {
