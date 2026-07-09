@@ -1,6 +1,6 @@
 // In-memory room management. No database — rooms live only as long as the
 // process runs, which is fine for the "in-memory, no DB" spec.
-import { generateBoard, getLayoutCount, pickRandomTarget, randomizeRobotPositions } from 'ricochet-shared';
+import { generateBoard, pickRandomTarget, randomizeRobotPositions } from 'ricochet-shared';
 
 const ROOM_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I, avoids ambiguity read aloud
 const ROOM_CODE_LENGTH = 4;
@@ -27,7 +27,7 @@ export function createRoom(hostSocketId, hostName) {
   const room = {
     code,
     hostId: hostSocketId,
-    layoutIndex: Math.floor(Math.random() * getLayoutCount()),
+    boardSeed: Math.floor(Math.random() * 2 ** 31),
     players: new Map([[hostSocketId, makePlayer(hostSocketId, hostName)]]),
     round: null,
     timers: {},
@@ -126,7 +126,7 @@ export function clearRoomTimers(room) {
 
 export function startRound(room) {
   clearRoomTimers(room);
-  const board = generateBoard(room.layoutIndex);
+  const board = generateBoard(room.boardSeed);
   const target = pickRandomTarget(board);
   const robots = randomizeRobotPositions(board, target);
   const roundNumber = (room.round?.roundNumber ?? 0) + 1;
@@ -148,7 +148,7 @@ export function serializeRoom(room) {
   return {
     code: room.code,
     hostId: room.hostId,
-    layoutIndex: room.layoutIndex,
+    boardSeed: room.boardSeed,
     players: [...room.players.values()],
     round: room.round,
   };

@@ -15,8 +15,8 @@ function clonePositions(robots) {
 // move state for the current round, resetting whenever a new round starts,
 // and separately drives the synced animated replay once the server posts a
 // winning solution for everyone to watch.
-export function useRoundBoard(layoutIndex, round) {
-  const board = generateBoard(layoutIndex);
+export function useRoundBoard(boardSeed, round) {
+  const board = generateBoard(boardSeed);
   const roundKey = round?.roundNumber ?? 0;
 
   const [robots, setRobots] = useState(() => (round ? clonePositions(round.robots) : null));

@@ -10,7 +10,7 @@ function noop() {}
 
 export default function MultiplayerRound({ room, you, declareClaim, submitSolution, startRound }) {
   const round = room.round;
-  const game = useRoundBoard(room.layoutIndex, round);
+  const game = useRoundBoard(room.boardSeed, round);
   const isHost = room.hostId === you.id;
 
   // Freeze private input while everyone's watching the synced solution replay.

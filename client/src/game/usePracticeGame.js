@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   applyMove,
   generateBoard,
-  getLayoutCount,
   getPathCells,
   isRobotOnTarget,
   pickRandomTarget,
@@ -19,17 +18,20 @@ function clonePositions(robots) {
   return copy;
 }
 
-function generatePuzzle(layoutIndex) {
-  const board = generateBoard(layoutIndex);
+function randomSeed() {
+  return Math.floor(Math.random() * 2 ** 31);
+}
+
+function generatePuzzle(boardSeed) {
+  const board = generateBoard(boardSeed);
   const target = pickRandomTarget(board);
   const robots = randomizeRobotPositions(board, target);
   return { board, target, robots };
 }
 
 export function usePracticeGame() {
-  const layoutCount = getLayoutCount();
-  const [layoutIndex, setLayoutIndex] = useState(0);
-  const [puzzle, setPuzzle] = useState(() => generatePuzzle(0));
+  const [boardSeed, setBoardSeed] = useState(randomSeed);
+  const [puzzle, setPuzzle] = useState(() => generatePuzzle(boardSeed));
   const { board, target } = puzzle;
 
   const [initialRobots, setInitialRobots] = useState(() => clonePositions(puzzle.robots));
@@ -83,10 +85,10 @@ export function usePracticeGame() {
   }, [closeHint]);
 
   const newPuzzle = useCallback(() => {
-    const nextLayout = Math.floor(Math.random() * layoutCount);
-    setLayoutIndex(nextLayout);
-    resetToPuzzle(generatePuzzle(nextLayout));
-  }, [layoutCount, resetToPuzzle]);
+    const nextSeed = randomSeed();
+    setBoardSeed(nextSeed);
+    resetToPuzzle(generatePuzzle(nextSeed));
+  }, [resetToPuzzle]);
 
   const reset = useCallback(() => {
     setRobots(clonePositions(initialRobots));
@@ -196,7 +198,7 @@ export function usePracticeGame() {
     solved,
     moveCount: history.length,
     hint,
-    layoutIndex,
+    boardSeed,
 
     selectRobot,
     move: moveSelected,

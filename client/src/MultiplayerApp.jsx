@@ -28,7 +28,7 @@ export default function MultiplayerApp() {
 
   return (
     <div>
-      <div className="mp-room-bar" data-layout-index={room.layoutIndex}>
+      <div className="mp-room-bar" data-board-seed={room.boardSeed}>
         <span className="mono">
           Room <strong>{room.code}</strong> · playing as <strong>{you.name}</strong>
         </span>

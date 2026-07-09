@@ -8,8 +8,27 @@ export const DIRECTIONS = ['up', 'down', 'left', 'right'];
 const OPPOSITE_SIDE = { N: 'S', S: 'N', E: 'W', W: 'E' };
 const SIDE_DELTA = { N: [-1, 0], S: [1, 0], E: [0, 1], W: [0, -1] };
 
+const TARGET_COUNT = 17;
+const EXTRA_WALL_COUNT = 14;
+const MIN_TARGET_SPACING = 2; // Chebyshev distance, keeps target pockets from crowding each other
+
 export function cellKey(row, col) {
   return `${row},${col}`;
+}
+
+// Small, fast, seeded PRNG (mulberry32) so a board is a pure function of its
+// seed — the server can send clients a single integer and both sides
+// reconstruct an identical board, without shipping the whole layout over the
+// wire.
+function createRng(seed) {
+  let a = seed >>> 0;
+  return function rng() {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
 function createEmptyWalls(size) {
@@ -47,77 +66,7 @@ function blockedCenterCells(size) {
   return cells;
 }
 
-// A handful of fixed layouts (a "small rotation") rather than fully random walls
-// every round. Each entry lists explicit wall segments plus target definitions
-// (cell + color + an L-shaped wall pocket so the target is reachable/stoppable).
-const LAYOUT_DEFS = [
-  {
-    // extra decorative walls scattered around the board, independent of targets
-    extraWalls: [
-      [2, 4, 'E'], [2, 9, 'S'], [4, 12, 'W'], [5, 2, 'S'],
-      [7, 5, 'E'], [9, 10, 'N'], [11, 3, 'E'], [12, 8, 'N'],
-      [13, 13, 'W'], [3, 1, 'S'], [6, 14, 'S'], [10, 1, 'N'],
-    ],
-    targets: [
-      { row: 1, col: 1, color: 'red', walls: ['S', 'E'] },
-      { row: 1, col: 6, color: 'blue', walls: ['S', 'W'] },
-      { row: 1, col: 10, color: 'green', walls: ['S', 'E'] },
-      { row: 1, col: 14, color: 'yellow', walls: ['S', 'W'] },
-      { row: 3, col: 3, color: 'green', walls: ['N', 'E'] },
-      { row: 3, col: 8, color: 'red', walls: ['S', 'W'] },
-      { row: 4, col: 13, color: 'yellow', walls: ['N', 'W'] },
-      { row: 5, col: 5, color: 'blue', walls: ['N', 'E'] },
-      { row: 6, col: 10, color: 'red', walls: ['S', 'E'] },
-      { row: 7, col: 2, color: 'yellow', walls: ['N', 'W'] },
-      { row: 8, col: 13, color: 'blue', walls: ['S', 'E'] },
-      { row: 9, col: 5, color: 'green', walls: ['S', 'W'] },
-      { row: 10, col: 9, color: 'yellow', walls: ['N', 'E'] },
-      { row: 11, col: 12, color: 'red', walls: ['N', 'W'] },
-      { row: 12, col: 2, color: 'blue', walls: ['S', 'E'] },
-      { row: 13, col: 6, color: 'green', walls: ['N', 'W'] },
-      { row: 14, col: 10, color: 'red', walls: ['N', 'E'] },
-      { row: 14, col: 14, color: 'blue', walls: ['N', 'W'] },
-    ],
-  },
-  {
-    extraWalls: [
-      [1, 7, 'S'], [2, 2, 'E'], [3, 11, 'S'], [5, 14, 'W'],
-      [6, 6, 'N'], [8, 1, 'S'], [9, 9, 'E'], [10, 13, 'N'],
-      [11, 5, 'S'], [12, 11, 'W'], [13, 3, 'N'], [14, 8, 'S'],
-    ],
-    targets: [
-      { row: 1, col: 3, color: 'yellow', walls: ['S', 'E'] },
-      { row: 1, col: 12, color: 'red', walls: ['S', 'W'] },
-      { row: 2, col: 9, color: 'blue', walls: ['N', 'E'] },
-      { row: 3, col: 1, color: 'green', walls: ['S', 'E'] },
-      { row: 4, col: 6, color: 'red', walls: ['N', 'W'] },
-      { row: 4, col: 14, color: 'blue', walls: ['S', 'W'] },
-      { row: 6, col: 3, color: 'yellow', walls: ['N', 'E'] },
-      { row: 6, col: 11, color: 'green', walls: ['S', 'E'] },
-      { row: 5, col: 9, color: 'blue', walls: ['S', 'W'] },
-      { row: 9, col: 1, color: 'red', walls: ['S', 'E'] },
-      { row: 9, col: 14, color: 'yellow', walls: ['N', 'W'] },
-      { row: 10, col: 5, color: 'green', walls: ['N', 'E'] },
-      { row: 11, col: 10, color: 'red', walls: ['S', 'W'] },
-      { row: 12, col: 13, color: 'blue', walls: ['N', 'E'] },
-      { row: 13, col: 2, color: 'green', walls: ['S', 'W'] },
-      { row: 14, col: 7, color: 'yellow', walls: ['N', 'E'] },
-      { row: 14, col: 12, color: 'red', walls: ['N', 'W'] },
-    ],
-  },
-];
-
-export function getLayoutCount() {
-  return LAYOUT_DEFS.length;
-}
-
-export function generateBoard(layoutIndex = 0) {
-  const size = BOARD_SIZE;
-  const def = LAYOUT_DEFS[layoutIndex % LAYOUT_DEFS.length];
-  const walls = createEmptyWalls(size);
-  const blocked = blockedCenterCells(size);
-
-  // Wall the center hole in on all sides so it behaves like a solid obstacle.
+function wallInCenterHole(walls, blocked, size) {
   const mid = size / 2;
   for (const r of [mid - 1, mid]) {
     for (const c of [mid - 1, mid]) {
@@ -131,19 +80,97 @@ export function generateBoard(layoutIndex = 0) {
       }
     }
   }
+}
 
-  for (const [row, col, side] of def.extraWalls) {
+// A cell touching the board boundary gets that boundary for free as a
+// "wall" on that side (a robot sliding into the edge already stops there),
+// so only the *other* axis needs an explicit wall — and a corner cell needs
+// none at all. This is what puts real obstacles right up against the edges
+// instead of only in the middle of the board.
+function pickPocketSides(row, col, size, rng) {
+  const sides = [];
+  if (row !== 0 && row !== size - 1) sides.push(rng() < 0.5 ? 'N' : 'S');
+  if (col !== 0 && col !== size - 1) sides.push(rng() < 0.5 ? 'E' : 'W');
+  return sides;
+}
+
+// Sides not already implied by the boundary, for decorative walls (so we
+// never add a redundant, invisible-in-effect wall right on the edge).
+function meaningfulSides(row, col, size) {
+  const sides = [];
+  if (row !== 0) sides.push('N');
+  if (row !== size - 1) sides.push('S');
+  if (col !== 0) sides.push('W');
+  if (col !== size - 1) sides.push('E');
+  return sides;
+}
+
+function chebyshevDistance(a, b) {
+  return Math.max(Math.abs(a.row - b.row), Math.abs(a.col - b.col));
+}
+
+function assignColors(count, rng) {
+  const colors = [];
+  while (colors.length < count) colors.push(...ROBOT_COLORS);
+  colors.length = count;
+  for (let i = colors.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [colors[i], colors[j]] = [colors[j], colors[i]];
+  }
+  return colors;
+}
+
+function pickTargetCell(size, blocked, placed, rng) {
+  let best = null;
+  for (let attempt = 0; attempt < 300; attempt++) {
+    const row = Math.floor(rng() * size);
+    const col = Math.floor(rng() * size);
+    const key = cellKey(row, col);
+    if (blocked.has(key)) continue;
+    if (placed.some((t) => t.row === row && t.col === col)) continue;
+    const tooClose = placed.some((t) => chebyshevDistance(t, { row, col }) < MIN_TARGET_SPACING);
+    if (!tooClose) return { row, col };
+    if (!best) best = { row, col }; // fallback if spacing can't be satisfied after many tries
+  }
+  return best;
+}
+
+// Procedurally generates a full board (walls + targets) from a single
+// integer seed — the same seed always reproduces the same board, so the
+// server only needs to broadcast the seed for every client to render an
+// identical layout.
+export function generateBoard(seed = Math.floor(Math.random() * 2 ** 31)) {
+  const size = BOARD_SIZE;
+  const rng = createRng(seed);
+  const walls = createEmptyWalls(size);
+  const blocked = blockedCenterCells(size);
+  wallInCenterHole(walls, blocked, size);
+
+  const placed = [];
+  for (let i = 0; i < TARGET_COUNT; i++) {
+    const cell = pickTargetCell(size, blocked, placed, rng);
+    if (!cell) break;
+    placed.push(cell);
+    for (const side of pickPocketSides(cell.row, cell.col, size, rng)) {
+      addWall(walls, cell.row, cell.col, side, size);
+    }
+  }
+
+  const colors = assignColors(placed.length, rng);
+  const targets = placed.map((cell, i) => ({ id: i, row: cell.row, col: cell.col, color: colors[i] }));
+
+  const targetKeys = new Set(targets.map((t) => cellKey(t.row, t.col)));
+  for (let i = 0; i < EXTRA_WALL_COUNT; i++) {
+    const row = Math.floor(rng() * size);
+    const col = Math.floor(rng() * size);
+    const key = cellKey(row, col);
+    if (blocked.has(key) || targetKeys.has(key)) continue;
+    const sides = meaningfulSides(row, col, size);
+    const side = sides[Math.floor(rng() * sides.length)];
     addWall(walls, row, col, side, size);
   }
 
-  const targets = def.targets.map((t, i) => {
-    for (const side of t.walls) {
-      addWall(walls, t.row, t.col, side, size);
-    }
-    return { id: i, row: t.row, col: t.col, color: t.color };
-  });
-
-  return { size, walls, blocked, targets, layoutIndex };
+  return { size, walls, blocked, targets, seed };
 }
 
 export function randomizeRobotPositions(board, excludeCell = null, rng = Math.random) {

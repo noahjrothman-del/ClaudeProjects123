@@ -103,7 +103,7 @@ export function submitSolution(io, room, playerId, moves) {
 
   clearTimeout(room.timers.grace);
 
-  const board = generateBoard(room.layoutIndex);
+  const board = generateBoard(room.boardSeed);
   const replay = replayMoveSequence(board, round.robots, moves);
   const valid =
     replay.valid &&

@@ -4,7 +4,6 @@ export {
   DIRECTIONS,
   cellKey,
   generateBoard,
-  getLayoutCount,
   randomizeRobotPositions,
   pickRandomTarget,
 } from './board.js';
